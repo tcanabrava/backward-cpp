@@ -92,6 +92,7 @@
 #include <vector>
 #include <exception>
 #include <iterator>
+#include <filesystem>
 
 #if defined(BACKWARD_SYSTEM_LINUX)
 
@@ -4147,6 +4148,9 @@ private:
 };
 
 /*************** SIGNALS HANDLING ***************/
+namespace {
+  std::filesystem::path _dump_path;
+}
 
 #if defined(BACKWARD_SYSTEM_LINUX) || defined(BACKWARD_SYSTEM_DARWIN)
 
@@ -4175,8 +4179,10 @@ public:
                                 sizeof posix_signals / sizeof posix_signals[0]);
   }
 
-  SignalHandling(const std::vector<int> &posix_signals = make_default_signals())
+  SignalHandling(const std::vector<int> &posix_signals = make_default_signals(),
+                 std::filesystem::path dump_path = {})
       : _loaded(false) {
+    _dump_path = dump_path;
     bool success = true;
 
     const size_t stack_size = 1024 * 1024 * 8;
@@ -4262,7 +4268,15 @@ public:
 
     Printer printer;
     printer.address = true;
-    printer.print(st, stderr);
+
+    if (std::filesystem::exists(_dump_path)) {
+      std::ofstream error_stream;
+      error_stream.open(_dump_path);
+      printer.print(st, error_stream);
+      error_stream.close();
+    } else {
+      printer.print(st, stderr);
+    }
 
 #if (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 700) || \
     (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L)
@@ -4298,7 +4312,8 @@ private:
 
 class SignalHandling {
 public:
-  SignalHandling(const std::vector<int> & = std::vector<int>())
+  SignalHandling(const std::vector<int> & = std::vector<int>(),
+                std::filesystem::path dump_path = {})
       : reporter_thread_([]() {
           /* We handle crashes in a utility thread:
             backward structures and some Windows functions called here
@@ -4321,6 +4336,7 @@ public:
           }
           cv().notify_one();
         }) {
+        _dump_path = dump_path;
     SetUnhandledExceptionFilter(crash_handler);
 
     signal(SIGABRT, signal_handler);
@@ -4462,7 +4478,16 @@ private:
     st.skip_n_firsts(skip_frames);
 
     printer.address = true;
-    printer.print(st, std::cerr);
+
+    if (std::filesystem::exists(_dump_path)) {
+      std::ofstream error_stream;
+      error_stream.open(_dump_path);
+      printer.print(st, error_stream);
+      error_stream.close();
+    } else {
+      printer.print(st, stderr);
+    }
+
   }
 };
 
