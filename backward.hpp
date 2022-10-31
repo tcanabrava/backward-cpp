@@ -4269,7 +4269,7 @@ public:
     Printer printer;
     printer.address = true;
 
-    if (std::filesystem::exists(_dump_path)) {
+    if (!_dump_path.empty()) {
       std::ofstream error_stream;
       error_stream.open(_dump_path);
       printer.print(st, error_stream);
@@ -4479,7 +4479,7 @@ private:
 
     printer.address = true;
 
-    if (std::filesystem::exists(_dump_path)) {
+    if (_dump_path!) {
       std::ofstream error_stream;
       error_stream.open(_dump_path);
       printer.print(st, error_stream);
