@@ -4312,6 +4312,8 @@ private:
 
 class SignalHandling {
 public:
+  static std::vector<int> make_default_signals() { return {}; }
+
   SignalHandling(const std::vector<int> & = std::vector<int>(),
                 std::filesystem::path dump_path = {})
       : reporter_thread_([]() {
@@ -4479,7 +4481,7 @@ private:
 
     printer.address = true;
 
-    if (_dump_path!) {
+    if (_dump_path) {
       std::ofstream error_stream;
       error_stream.open(_dump_path);
       printer.print(st, error_stream);
@@ -4497,7 +4499,8 @@ private:
 
 class SignalHandling {
 public:
-  SignalHandling(const std::vector<int> & = std::vector<int>()) {}
+  SignalHandling(const std::vector<int> & = std::vector<int>(), const
+std::filesystem::path & = {}) {}
   bool init() { return false; }
   bool loaded() { return false; }
 };
