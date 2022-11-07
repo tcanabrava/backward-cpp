@@ -4481,7 +4481,7 @@ private:
 
     printer.address = true;
 
-    if (_dump_path) {
+    if (!_dump_path.empty()) {
       std::ofstream error_stream;
       error_stream.open(_dump_path);
       printer.print(st, error_stream);
